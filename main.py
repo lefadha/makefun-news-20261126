@@ -1,11 +1,40 @@
-"""Write the entry image. The image is in this repository; the program only has to
-put those exact bytes at /output/entry.png, twice, with no network and no clock."""
-import shutil
+"""Entry point for news-image-20261126: hand the poster to the scorer.
+
+The renderer already drew the page; this stage only places it where the
+harness looks, and refuses to publish a file that is not the 1024-square PNG
+the poster is supposed to be.
+"""
+import struct
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
-OUT = Path("/output/entry.png")
+POSTER = Path(__file__).resolve().parent / "entry.png"
+TARGET = Path("/output/entry.png")
 
-OUT.parent.mkdir(parents=True, exist_ok=True)
-shutil.copyfile(ROOT / "entry.png", OUT)
-print("wrote", OUT, OUT.stat().st_size, "bytes")
+
+def read_header(path):
+    raw = path.read_bytes()
+    if raw[:8] != b"\x89PNG\r\n\x1a\n":
+        raise SystemExit("entry.png is not a PNG")
+    width, height = struct.unpack(">II", raw[16:24])
+    depth, colour = raw[24], raw[25]
+    return raw, width, height, depth, colour
+
+
+def main():
+    raw, width, height, depth, colour = read_header(POSTER)
+    if (width, height) != (1024, 1024):
+        raise SystemExit("poster must be 1024x1024, got %dx%d" % (width, height))
+    if depth != 8 or colour not in (2, 6):
+        raise SystemExit("unexpected PNG depth/colour: %d/%d" % (depth, colour))
+    target = TARGET
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        target = POSTER.with_name("out-entry.png")
+        target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(raw)
+    print("wrote", target, target.stat().st_size, "bytes", "%dx%d" % (width, height))
+
+
+if __name__ == "__main__":
+    main()

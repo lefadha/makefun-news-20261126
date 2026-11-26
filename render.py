@@ -59,7 +59,7 @@ WIRE = [
     ("AUSTRALIA", "Anthropic's first data centre wins environmental approval."),
 ]
 
-FOOT = "Scanned 41 wire feeds · items timestamped Thursday 26 November 2026, 00:00-02:00 GMT"
+FOOT = "41 wire feeds scanned · 33 items · Thursday 26 November 2026, 00:00-02:00 GMT · edition one"
 
 
 def font(size, bold=False, serif=False):
